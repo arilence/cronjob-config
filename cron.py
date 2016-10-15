@@ -4,14 +4,17 @@
 --      PROGRAM:                cron
 --
 --      FUNCTIONS:              __init__(self)
+--                              inputAnswer(self, prompt, validation)
 --                              validateFrequency(self, frequency)
 --                              validateEmail(self, email)
 --                              validateFile(self, fileLocation)
 --                              createCronFile(self, frequency, email, fileLocation)
 --
---      DATE:                   October 12, 2016
+--      DATE:                   October 11, 2016
 --
 --      REVISIONS:              (Date and Description)
+--                              October 12, 2016
+--                              Modified the input to accept command line arguments
 --
 --      DESIGNERS:              Anthony Smith
 --
@@ -29,19 +32,19 @@ from enum import Enum
 class Shell:
     def __init__(self, args):
         ## Enter cronjob frequency
-        if args.frequency:
-            frequency = args.frequency
+        if args.freq and self.validateFrequency(args.freq):
+            frequency = args.freq
         else:
             frequency = self.inputAnswer('Frequency of the cronjob (* * * * *): ', self.validateFrequency)
 
         ## Enter email address
-        if args.email:
+        if args.email and self.validateEmail(args.email):
             email = args.email
         else:
             email = self.inputAnswer('Recipient email (test@example.com): ', self.validateEmail)
 
         ## Enter file location
-        if args.file:
+        if args.file and self.validateFile(args.file):
             fileLoc = args.file
         else:
             fileLoc = self.inputAnswer('File to attach to the email (/var/root): ', self.validateFile)
@@ -92,7 +95,7 @@ class Shell:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--frequency', help='How often the cronjob runs')
+    parser.add_argument('--freq', help='How often the cronjob runs')
     parser.add_argument('--email', help='Address to send an email to')
     parser.add_argument('--file', help='Location of a file to attach to an email')
     args = parser.parse_args()
