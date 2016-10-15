@@ -168,7 +168,7 @@ class Shell:
     --------------------------------------------------------------------------------------"""
     def createCronFile(self, frequency, email, fileLocation):
         # generate a temporary file to store the cronjob
-        template = '{} echo “Here is a requested file” | mail -s “Cron Job” -a {} {} \n'.format(frequency, fileLocation, email)
+        template = '{} echo "Here is a requested file" | mail -s "Cron Job" -a {} {} \n'.format(frequency, fileLocation, email)
         _file = open('.temp-cron', 'w+')
         _file.write(template)
         _file.close()
