@@ -15,6 +15,8 @@
 --      REVISIONS:              (Date and Description)
 --                              October 12, 2016
 --                              Modified the input to accept command line arguments
+--                              October 15, 2016
+--                              Fix cronjob importing from file
 --
 --      DESIGNERS:              Anthony Smith
 --
@@ -25,7 +27,7 @@
 --      at every specified interval. The program reads command line arguments or
 --      prompts the user for the arguments unspecified.
 --------------------------------------------------------------------------------------"""
-import sys, re, argparse
+import sys, re, argparse, subprocess, os
 from pathlib import Path
 from enum import Enum
 
@@ -35,19 +37,19 @@ class Shell:
         if args.freq and self.validateFrequency(args.freq):
             frequency = args.freq
         else:
-            frequency = self.inputAnswer('Frequency of the cronjob (* * * * *): ', self.validateFrequency)
+            frequency = self.inputAnswer('Frequency of the cronjob (eg: * * * * *): ', self.validateFrequency)
 
         ## Enter email address
         if args.email and self.validateEmail(args.email):
             email = args.email
         else:
-            email = self.inputAnswer('Recipient email (test@example.com): ', self.validateEmail)
+            email = self.inputAnswer('Recipient email: ', self.validateEmail)
 
         ## Enter file location
         if args.file and self.validateFile(args.file):
             fileLoc = args.file
         else:
-            fileLoc = self.inputAnswer('File to attach to the email (/var/root): ', self.validateFile)
+            fileLoc = self.inputAnswer('File to attach to the email: ', self.validateFile)
 
         ## Create cronfile
         if (self.createCronFile(frequency, email, fileLoc)):
@@ -86,12 +88,24 @@ class Shell:
             return False
 
     def createCronFile(self, frequency, email, fileLocation):
-        template = '{} echo “Here is a requested file” | mail -s “Cron Job” -a {} {}'.format(frequency, fileLocation, email)
-
+        # generate a temporary file to store the cronjob
+        template = '{} echo “Here is a requested file” | mail -s “Cron Job” -a {} {} \n'.format(frequency, fileLocation, email)
         _file = open('.temp-cron', 'w+')
         _file.write(template)
         _file.close()
-        return True
+
+        # install cronjob from temporary file
+        bashCommand = 'crontab .temp-cron'
+        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+        output, error = process.communicate()
+
+        # remove temporary file
+        os.remove('.temp-cron')
+
+        if not error:
+            return True
+        else:
+            return False
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
